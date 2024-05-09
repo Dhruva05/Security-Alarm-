@@ -4,7 +4,7 @@ from deepface import DeepFace
 import threading
 from twilio.rest import Client
 import keys
-import timer
+import time
 
 
 cap = cv2.VideoCapture(0)
@@ -44,7 +44,7 @@ def message():
 
 while True:
     ret, frame = cap.read()
-    #gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     if ret:
         if counter % 30 == 0:
@@ -62,12 +62,15 @@ while True:
             faces = face_cascade.detectMultiScale(frame, scaleFactor=1.1, minNeighbors=5, minSize=(50,50))#frame --> gray_frame
             if len(faces) > 0:
                 if unknown_start_time is None:
-                    unknown_start_time = timer.time()
-                elif timer.time() - unknown_start_time >= 120:
-                    message()
-                    unknown_start_time = timer.time()
-            else:
-                unknown_start_time = None
+                    unknown_start_time = time.time()
+                else:
+                    if time.time() - unknown_start_time > 120:
+                        threading.Thread(target=message).start()
+                        unknown_start_time = None
+                        message()
+    
+
+                    
         cv2.imshow('frame', frame)
     key = cv2.waitKey(1)
     if key == ord('q'):
